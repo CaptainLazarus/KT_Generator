@@ -16,6 +16,7 @@ Repository of the code base for KT Generation process that we worked at LifeSigh
 
 1. Copy `Code/KT Generator/.env.sample` to `Code/KT Generator/.env` and fill in the values.
 2. create a file `kt_gen3` in the root directory.
+3. Run a local build with `$ poetry poe test`
 
 ## Run
 

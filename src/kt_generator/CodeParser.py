@@ -2,7 +2,7 @@ import ast
 from loguru import logger
 
 
-class code_parser:
+class CodeParser:
     def extract_classes_from_code(self, code: str):
         parsed_code = ast.parse(code)
         classes = []
@@ -101,4 +101,4 @@ if __name__ == "__main__":
     with open("test_code_google_calender.py", "r") as f:
         source = f.read()
 
-    extracted_elements = code_parser().extract_elements(source)
+    extracted_elements = CodeParser().extract_elements(source)

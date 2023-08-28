@@ -49,7 +49,7 @@ source_file = "source.txt"
 
 logger.info("Starting the processing...")
 
-codeparser = code_parser()
+codeparser = CodeParser()
 
 all_classes = {}
 
@@ -88,7 +88,7 @@ walk_directory(test_directory, source_file)
 with open(source_file, "r") as f:
     source = f.read()
 
-# codeparser = code_parser()
+# codeparser = CodeParser()
 # extracted_elements = codeparser.extract_elements(source)
 
 logger.info("Code parsing completed...")

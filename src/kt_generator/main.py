@@ -26,7 +26,7 @@ avatar_image_url = (
 
 logger.info("Starting the processing...")
 
-codeparser = code_parser()
+codeparser = CodeParser()
 nodes = dict()
 
 # -------------------------------

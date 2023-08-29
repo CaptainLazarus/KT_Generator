@@ -16,6 +16,12 @@ Repository of the code base for KT Generation process that we worked at LifeSigh
 
 1. Copy `Code/KT Generator/.env.sample` to `Code/KT Generator/.env` and fill in the values.
 2. create a file `kt_gen3` in the root directory.
+3. Create a folder called `test` in the root directory and add the codebase you wish to test in it.
+4. Edit the `required_nodes` with the required functions/classes. 
+    a. Class format = `class_name`
+    b. Function format = `class_name.function_name`
+
+*Note: This is a happy path, so if any errors, report*
 
 ## Notes
 1. Default model is `gpt-4`. Pass the required model to service configuration to change.

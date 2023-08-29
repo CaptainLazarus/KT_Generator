@@ -59,12 +59,3 @@ class CodeParser:
             elements.insert(0, imports_block)
 
         return elements
-
-
-if __name__ == "__main__":
-    # Provide the code directly as a string or read from a file
-    # If you are reading from a file:
-    with open("test_code_google_calender.py", "r") as f:
-        source = f.read()
-
-    extracted_elements = CodeParser().extract_elements(source)

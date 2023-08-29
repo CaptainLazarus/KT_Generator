@@ -54,6 +54,7 @@ Rules:
 2. Be professional, don't use too many analogies
 3. Limit to 300 words max
 4. Ignore error management & validations
+5. Replace underscores with spaces
 """
 
 
@@ -78,7 +79,9 @@ class OpenAIClient:
             }
         )
 
-    def create_chat(self, message, temperature=0.8, presence_penalty=0, frequency_penalty=0):
+    def create_chat(
+        self, message, temperature=0.8, presence_penalty=0, frequency_penalty=0
+    ):
         self.history.append({"role": "user", "content": message})
         openai.api_base = "https://api.portkey.ai/v1/proxy"
         response = openai.ChatCompletion.create(
@@ -91,8 +94,8 @@ class OpenAIClient:
                 "x-portkey-api-key": PORTKEY_API_KEY,
                 "x-portkey-mode": "proxy openai",
                 "x-portkey-retry-count": "4",
-                "x-portkey-cache": "simple"
-            }
+                # "x-portkey-cache": "simple",
+            },
         )
 
         response_content = response.choices[0].message["content"].strip()

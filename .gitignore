@@ -154,3 +154,10 @@ allure-results
 
 # Generated Images
 kt_gen3
+output
+test/
+scripts/
+class.py
+method.py
+object.py
+source.txt

@@ -5,8 +5,8 @@ from kt_generator.CodeParser import CodeParser
 def read_fixture_file(file_name):
     this_file_path = os.path.dirname(os.path.abspath(__file__))
     that_file_path = os.path.join(this_file_path, "fixtures", file_name)
-    with open(that_file_path, "r") as f:
-        return f.read()
+    with open(that_file_path, "r") as file:
+        return file.read()
 
 
 class TestCodeParser:

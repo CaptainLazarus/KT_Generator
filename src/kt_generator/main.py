@@ -5,7 +5,7 @@ from CodeParser import *
 from CreateVideo import *
 from DIDVideoGenerator import *
 from ResponseGenerator import *
-import ast
+
 from open_ai_client import (
     OpenAIClient,
     METHOD_EXPLAINATION_PROMPT,
@@ -146,9 +146,9 @@ def create_method_script(
 
 # Need to iteratively generate scripts for classes and methods.
 def gen_scripts(classes, methods, temperature=0.8, presence_penalty=0, frequency_penalty=0, iterations=1):
+    scripts = []
     for k in range(iterations):
         logger.info(f"Iteration: {k}")
-        scripts = []
 
         logger.info("Generating class scripts...")
         class_scripts = create_class_script(
@@ -166,6 +166,8 @@ def gen_scripts(classes, methods, temperature=0.8, presence_penalty=0, frequency
         logger.info("Writing scripts to file...")
         with open(f"./scripts/scripts_{now}_{temperature}_{frequency_penalty}_{k}.py", "w") as f:
             f.write(str(scripts))
+
+    return scripts
 
 
 # --------------------------------
@@ -211,22 +213,22 @@ with open("method.py", "w") as f:
 
 
 scripts = gen_scripts(classes, methods, temperature=0.8,
-                      presence_penalty=0.3, frequency_penalty=0.3, iterations=1)
+                      presence_penalty=0.3, frequency_penalty=0.3)
 
 # # %%
 # # Generate video
-# video_processor = DIDVideoGeneration(source_url=avatar_image_url)
+video_processor = DIDVideoGeneration(source_url=avatar_image_url)
 
 # # video_processor.process_chunk(summary, "summaries", save_path)
-# for index, chunk in enumerate(video_scripts):
-#     logger.info(f"Chunk {index} video generation started...")
-#     video_processor.process_chunk(chunk, index, save_path)
-#     logger.info(f"Chunk {index} video generation completed...")
+for index, chunk in enumerate(scripts):
+    logger.info(f"Chunk {index} video generation started...")
+    video_processor.process_chunk(chunk, index, save_path)
+    logger.info(f"Chunk {index} video generation completed...")
 
 # # %%
 # # Stitch videos and images together
-# video_paths = [os.path.join(save_path, f"chunk_{i}.mp4") for i in range(
-#     len(elements_for_images))]
-# image_paths = [os.path.join(save_path, f"image_{i}.png") for i in range(
-#     len(elements_for_images))]
-# stitch_video(save_path, video_paths, image_paths)
+video_paths = [os.path.join(save_path, f"chunk_{i}.mp4") for i in range(
+    len(elements_for_images))]
+image_paths = [os.path.join(save_path, f"image_{i}.png") for i in range(
+    len(elements_for_images))]
+stitch_video(save_path, video_paths, image_paths)

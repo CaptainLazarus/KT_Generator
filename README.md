@@ -16,11 +16,17 @@ Repository of the code base for KT Generation process that we worked at LifeSigh
 
 1. Copy `Code/KT Generator/.env.sample` to `Code/KT Generator/.env` and fill in the values.
 2. create a file `kt_gen3` in the root directory.
-3. Install deps with `$ poetry install`
-4. Add poe as a poetry plugin `$ poetry self add 'poethepoet[poetry_plugin]'`
-5. Run tests with `$ poetry poe test`
-6. Lint with `$ poetry poe lint`
-7. Run a local build with `$ poetry poe all`
+3. Create a folder called `test` in the root directory and add the codebase you wish to test in it.
+4. Edit the `required_nodes` with the required functions/classes. 
+    a. Class format = `class_name`
+    b. Function format = `class_name.function_name`
+5. Install deps with `$ poetry install`
+6. Add poe as a poetry plugin `$ poetry self add 'poethepoet[poetry_plugin]'`
+7. Run tests with `$ poetry poe test`
+8. Lint with `$ poetry poe lint`
+9. Run a local build with `$ poetry poe all`
+
+*Note: This is a happy path, so if any errors, report*
 
 ## Run
 

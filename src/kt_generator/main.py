@@ -33,11 +33,13 @@ nodes = dict()
 
 
 def process_file(directory_path, file_path, output_file, global_index):
-    with open(file_path, "r") as f:
-        content = f.read()
+    if file_path.endswith(".py"):
 
-        # Only analyze Python files
-        if file_path.endswith(".py"):
+        with open(file_path, "r") as f:
+            content = f.read()
+
+            # Only analyze Python files
+
             # Remove the root directory and '.py' extension to form the module name
             module_name = os.path.relpath(file_path, directory_path)[:-3].replace(
                 os.path.sep, "."
@@ -47,8 +49,8 @@ def process_file(directory_path, file_path, output_file, global_index):
             # Merge the newly found classes into the global dictionary
             global_index.update(class_info)
 
-        output_file.write(content)
-        output_file.write("\n\n")
+            output_file.write(content)
+            output_file.write("\n\n")
 
 
 def walk_directory(dir_path, output_file_path, global_index):
@@ -58,20 +60,51 @@ def walk_directory(dir_path, output_file_path, global_index):
                 file_path = os.path.join(root, filename)
                 if os.path.isfile(file_path):
                     print(f"Processing file: {file_path}")
-                    process_file(dir_path, file_path, output_file, global_index)
+                    process_file(dir_path, file_path,
+                                 output_file, global_index)
 
 
-def get_required_nodes(x):
+def get_required_nodes(node_names, for_images=False):
+    if for_images:
+        logger.info("get required nodes for images")
+    else:
+        logger.info("get required nodes for script")
+
     output = []
-    for i in x:
-        node = nodes[i]
-        temp = {
-            "name": i,
+    for name in node_names:
+        node = nodes[name]
+        node_info = {
+            "name": name,
             "body": node["body"],
         }
         if "class_name" in node:
-            temp["class_name"] = node["class_name"]
-        output.append(temp)
+            node_info["class_name"] = node["class_name"]
+
+        if name == "InteractiveSpecificationTask" and for_images:
+            """
+            Hardcoding the handling for InteractiveSpecificationTask
+            as we want a specific image being generated for it.
+            """
+            node_info["body"] = """
+class InteractiveSpecificationTask(Task):
+    class Meta:
+        proxy = True
+
+    @classmethod
+    def get_task_type(cls):
+        return "InteractiveSpecification"
+
+    def kick_off(self, bot: SlackBot):
+        ...
+
+    def handle_user_response(self, bot: SlackBot, user_input: str):
+        ...
+
+    def generate_story(self, bot: SlackBot):
+        ...
+            """
+
+        output.append(node_info)
     return output
 
 
@@ -81,7 +114,7 @@ def create_class_script(
 ):
     scripts = []
     for i in classes:
-        open_ai_client.reset_history()
+        # open_ai_client.reset_history()
         class_prompt = CLASS_EXPLAINATION_PROMPT.format(
             context_code=i["body"], class_name=i
         )
@@ -99,7 +132,7 @@ def create_method_script(
 ):
     scripts = []
     for i in methods:
-        open_ai_client.reset_history()
+        # open_ai_client.reset_history()
         method_prompt = METHOD_EXPLAINATION_PROMPT.format(
             context_code=i["body"], method_name=i
         )
@@ -112,72 +145,73 @@ def create_method_script(
 
 
 # Need to iteratively generate scripts for classes and methods.
-def gen_scripts(classes, methods, temp=0.8, freq_penalty=0, iterations=1):
+def gen_scripts(classes, methods, temperature=0.8, presence_penalty=0, frequency_penalty=0, iterations=1):
     for k in range(iterations):
         logger.info(f"Iteration: {k}")
         scripts = []
 
         logger.info("Generating class scripts...")
         class_scripts = create_class_script(
-            classes, temperature=temp, frequency_penalty=freq_penalty
+            classes, temperature=temperature, presence_penalty=presence_penalty, frequency_penalty=frequency_penalty
         )
 
         logger.info("Generating method scripts...")
         method_scripts = create_method_script(
-            methods, temperature=temp, frequency_penalty=freq_penalty
+            methods, temperature=temperature,  presence_penalty=presence_penalty, frequency_penalty=frequency_penalty
         )
 
         scripts = class_scripts + method_scripts
 
-        for i in scripts:
-            logger.info(i)
-
         now = datetime.now()
         logger.info("Writing scripts to file...")
-        with open(f"./scripts/scripts_{now}_{temp}_{freq_penalty}_{k}.py", "w") as f:
+        with open(f"./scripts/scripts_{now}_{temperature}_{frequency_penalty}_{k}.py", "w") as f:
             f.write(str(scripts))
 
 
 # --------------------------------
 
-test_directory = "./test"
-source_file = "source.txt"
-walk_directory(test_directory, source_file, nodes)
+source_code_dir_path = os.getenv("SOURCE_CODE_PATH")
+assert source_code_dir_path, "SOURCE_CODE_PATH is not set!"
 
-with open(source_file, "r") as f:
-    source = f.read()
-
+code_dump_filepath = "source.txt"
+walk_directory(source_code_dir_path, code_dump_filepath, nodes)
 logger.info("Code parsing completed...")
+
+# with open(code_dump_filepath, "r") as f:
+#     source = f.read()
 
 with open("object.py", "w") as f:
     f.write(str(nodes))
 
 required_nodes = [
-    "DIDVideoGeneration",
-    "DIDVideoGeneration.download_video",
+    "InteractiveSpecificationTask",
+    "InteractiveSpecificationTask.kick_off",
+    "InteractiveSpecificationTask.handle_user_response",
+    "InteractiveSpecificationTask.generate_story"
 ]
 
-processed_nodes = get_required_nodes(required_nodes)
+nodes_for_images = get_required_nodes(required_nodes, for_images=True)
 logger.info("Selected elements extraction completed...")
 # logger.info(processed_nodes)
 
 # %%
 # Generate carbon snippets
-elements_for_images = [x["body"] for x in processed_nodes]
-# generate_carbon_snippets(elements_for_images, save_path)
+elements_for_images = [x["body"] for x in nodes_for_images]
+generate_carbon_snippets(elements_for_images, save_path)
 
-classes = [x for x in processed_nodes if "class_name" not in x]
+nodes_for_script = get_required_nodes(required_nodes, for_images=False)
+classes = [x for x in nodes_for_script if "class_name" not in x]
 # logger.info(classes)
 with open("class.py", "w") as f:
     f.write(str(classes))
 
-methods = [x for x in processed_nodes if "class_name" in x]
+methods = [x for x in nodes_for_script if "class_name" in x]
 with open("method.py", "w") as f:
     f.write(str(classes))
 
-for t in [0.6 , 0.8 , 1 , 1.2]:
-    for f_p in [0, 1, 2]:
-        scripts = gen_scripts(classes, methods, temp=t, freq_penalty=f_p, iterations=3)
+
+scripts = gen_scripts(classes, methods, temperature=0.8,
+                      presence_penalty=0.3, frequency_penalty=0.3, iterations=1)
 
 # # %%
 # # Generate video
